@@ -170,4 +170,53 @@ class HttpServerTest {
     await httpServer.stop();
 
   }
+
+  @test async "should allow base and address to specify links to external url"() {
+
+    let theAddress = "www.w3.org";
+    let theBase = `http://${theAddress}/WOT`;
+    let httpServer = new HttpServer({
+      address: theAddress
+    });
+
+    await httpServer.start(null);
+
+    let testThing = new ExposedThing(null);
+    testThing = Helpers.extend({
+      title: "Test",
+      base: theBase,
+      properties: {
+        test: {
+          type: "string"
+        }
+      },
+      actions: {
+        try: {
+          output: {type: "string"}
+        }
+      }
+    }, testThing);
+    testThing.extendInteractions();
+    await testThing.writeProperty("test", "off")
+    testThing.properties.test.forms = [];
+    testThing.setActionHandler("try", (input) => {
+      return new Promise<string>((resolve, reject) => {
+        resolve("TEST");
+      });
+    });
+    testThing.actions.try.forms = [];
+
+    await httpServer.expose(testThing);
+
+    let uri = `http://localhost:${httpServer.getPort()}/Test/`;
+    let body;
+
+    body = await rp.get(uri);
+    console.log(JSON.stringify(JSON.parse(body),undefined,2))
+
+    var expected_url = `${theBase}/Test/all/properties`;
+
+    expect(body).to.include(expected_url);
+  }
+
 }

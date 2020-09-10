@@ -156,6 +156,7 @@ The protocol binding can be configured using his constructor or trough servient 
     serverKey?: string;             // HTTPs server secret key file
     serverCert?: string;            // HTTPs server certificate file
     security?: TD.SecurityScheme;   // Security scheme of the server
+    baseUri?: string                // A Base URI to be used in the TD in cases where the client will access a different URL than the actual machine serving the thing.  [See Using BaseUri below]
 }
 ```
 When both `serverKey` and `serverCert` are defined the server is started in `https` mode. Examples of `serverKey` and `serverCert` can be found [here](../../examples/security). Moreover, when a security schema is provided the servient must be also configured with valid credentials both client and server side. See [Security](#Security) for further details.
@@ -214,6 +215,43 @@ The above configuration file, is setting up a https server with basic secure sch
 Currently this binding supports only oAuth2.0 `client credential` and `Resource owner credential` flows. Other flows may be implemented in future like `code` flow. Futhermore, the oAuth2.0 protocol is only implemented for the client side.
 
 An example of a WoT oAuth2.0 enabled client can be found [here](../examples/security/oauth).
+
+
+### Using BaseUri
+
+> BaseUri allows the TD to use hostnames, network interfaces, and URI prefixes whicch are not local to the machine exposing the Thing
+
+Assume the coffee machine example is sitting in an office inside the W3C's private network.  It allows you to start the coffee machine before you leave home so it will be ready when you get to work.
+
+* It can be addressed from home via the internet facing domain name `https://wot.w3c.org/things/smart-coffee-machinet`
+* The actual coffee machine TD is at `https://internal-host:8080/coffee-pot`
+
+__HttpServer Configuration__
+```js
+servient.addServer(new HttpServer({
+    port: 8080, // (default 8080)
+    baseUri: 'https://coffee.w3c.org/things'
+}));
+```
+
+__External Gateway Configuration__
+> assume nginx
+
+```
+location /things/ {
+    proxy_pass https://internal-host:8080/smart-coffee-machine
+}
+```
+
+The exposed thing on the internal server will product form URLs such as:
+
+```json 
+ "actions": {
+    "makeDrink": {
+      "forms": [
+        {
+          "href": "https://wot.w3c.org/pot/things/smart-coffee-machine/actions/makeDrink"
+```
 
 ## Feature matrix
 

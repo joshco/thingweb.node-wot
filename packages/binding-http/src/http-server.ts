@@ -201,7 +201,7 @@ export default class HttpServer implements ProtocolServer {
 
       if (this.baseUri !== undefined) {
         let base: string = this.baseUri.concat("/", encodeURIComponent(urlPath))
-        console.info("[binding-http]", "HttpServer using baseUri " + base)
+        console.info("[binding-http]", "HttpServer TD hrefs using baseUri " + this.baseUri)
         this.addEndpoint(thing, tdTemplate, base )
       } else {
         // fill in binding data

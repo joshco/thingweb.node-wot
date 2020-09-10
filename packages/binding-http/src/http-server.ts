@@ -184,27 +184,29 @@ export default class HttpServer implements ProtocolServer {
       return encodeURIComponent(interactionName);
     }
   }
-  
+
   public expose(thing: ExposedThing, tdTemplate?: WoT.ThingDescription): Promise<void> {
 
-    let title = thing.title;
+    let slugify = require('slugify');
+    let urlPath = slugify(thing.title, {lower: true});
 
-    if (this.things.has(title)) {
-      title = Helpers.generateUniqueName(title);
+    if (this.things.has(urlPath)) {
+      urlPath = Helpers.generateUniqueName(urlPath);
     }
 
     if (this.getPort() !== -1) {
 
-      console.debug("[binding-http]", `HttpServer on port ${this.getPort()} exposes '${thing.title}' as unique '/${title}'`);
-      this.things.set(title, thing);
+      console.debug("[binding-http]",`HttpServer on port ${this.getPort()} exposes '${thing.title}' as unique '/${urlPath}'`);
+      this.things.set(urlPath, thing);
 
       if (this.baseUri !== undefined) {
-        console.info("[binding-http]", "HttpServer using baseUri " + this.baseUri)
-        this.addEndpoint(thing, tdTemplate, this.baseUri.concat("/", encodeURIComponent(title)))
+        let base: string = this.baseUri.concat("/", encodeURIComponent(urlPath))
+        console.info("[binding-http]", "HttpServer using baseUri " + base)
+        this.addEndpoint(thing, tdTemplate, base )
       } else {
         // fill in binding data
         for (let address of Helpers.getAddresses()) {
-          let base: string = this.scheme + "://" + address + ":" + this.getPort() + "/" + encodeURIComponent(title);
+          let base: string = this.scheme + "://" + address + ":" + this.getPort() + "/" + encodeURIComponent(urlPath);
 
           this.addEndpoint(thing, tdTemplate, base)
           // media types

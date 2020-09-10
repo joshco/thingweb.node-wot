@@ -54,6 +54,29 @@ class WoTRuntimeTest {
         this.servient.shutdown();
     }
 
+    @test "should provide cli args"() {
+
+        let envScript = `module.exports = process.argv[0]`;
+
+        const test = WoTRuntimeTest.servient.runPrivilegedScript(envScript, undefined, { argv: ['myArg']})
+        assert.equal(test,'myArg')
+    }
+
+    @test "should provide env variables"() {
+
+        let envScript = `module.exports = process.env.MY_VAR`;
+        process.env;
+        const test = WoTRuntimeTest.servient.runPrivilegedScript(envScript, undefined, { env:{'MY_VAR':'test'} })
+        assert.equal(test, 'test')
+    }
+    @test "should hide system env variables"() {
+
+        let envScript = `module.exports = process.env.OS`;
+
+        const test = WoTRuntimeTest.servient.runPrivilegedScript(envScript)
+        assert.equal(test, undefined)
+    }
+
     @test "should catch synchronous errors"() {
 
         let failNowScript = `throw new Error("Synchronous error in Servient sandbox");`;

@@ -173,51 +173,35 @@ class HttpServerTest {
 
   }
 
+  @test async "config.port is overriden by WOT_PORT or PORT"() {
 
-  @test async "should allow HttpServer baseUri to specify url prefix for proxied/gateswayed/buildpack etc "() {
-
-    let theHostname = "wot.w3c.loopback.site:8080";
-    let theBasePath= '/things'
-    let theBaseUri = `http://${theHostname}${theBasePath}`;
-    let httpServer = new HttpServer({
-      baseUri: theBaseUri
-    });
-
+    // Works when none set
+    let httpServer = new HttpServer({ port: 58080 });
     await httpServer.start(null);
+    expect(httpServer.getPort()).to.eq(58080); // WOT PORT from test
+    await httpServer.stop();
 
-    let testThing = new ExposedThing(null);
-    testThing = Helpers.extend({
-      title: "Smart Coffee Machine",
-      properties: {
-        maintenanceNeeded: {
-          type: "string"
-        }
-      },
-      actions: {
-        makeDrink: {
-          output: {type: "string"}
-        }
-      }
-    }, testThing);
-    testThing.extendInteractions();
-    testThing.properties.maintenanceNeeded.forms = [];
-    testThing.actions.makeDrink.forms = [];
+    // Check PORT
+    process.env.PORT='2222'
+    httpServer = new HttpServer({ port: 58080 });
+    await httpServer.start(null);
+    expect(httpServer.getPort()).to.eq(2222); // from PORT
+    await httpServer.stop();
 
-    const td = testThing.getThingDescription()
+    // CHECK WOT_PORT
+    process.env.PORT=undefined
+    process.env.WOT_PORT='3333'
+    httpServer = new HttpServer({ port: 58080 });
+    await httpServer.start(null);
+    expect(httpServer.getPort()).to.eq(3333); // WOT PORT from test
+    await httpServer.stop();
 
-    await httpServer.expose(testThing);
-
-    let uri = 'http://localhost:8080/smart-coffee-machine' //theBase.concat('/')
-    let body;
-
-    body = await rp.get(uri);
-    //console.debug(JSON.stringify(JSON.parse(body),undefined,2))
-
-    var expected_url = `${theBaseUri}/smart-coffee-machine/actions/makeDrink`
-
-    expect(body).to.include(expected_url);
-    console.log(`Found URL ${expected_url} in TD`)
-
+    // Check WOT_PORT has higher priority than PORT
+    process.env.PORT='2600'
+    process.env.WOT_PORT='1337'
+    httpServer = new HttpServer({ port: 58080 });
+    await httpServer.start(null);
+    expect(httpServer.getPort()).to.eq(1337); // WOT PORT from test
+    await httpServer.stop();
   }
-
 }

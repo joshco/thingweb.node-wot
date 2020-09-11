@@ -235,34 +235,31 @@ export default class HttpServer implements ProtocolServer {
   public addEndpoint(thing: ExposedThing, tdTemplate: WoT.ThingDescription, base: string) {
       for (let type of ContentSerdes.get().getOfferedMediaTypes()) {
 
-        if (true) { // make reporting of all properties optional?
-          // check for readOnly/writeOnly for op field and whether there are any properties at all
-          let allReadOnly = true;
-          let allWriteOnly = true;
-          let anyProperties = false;
-          for (let propertyName in thing.properties) {
-            anyProperties = true;
-            if (!thing.properties[propertyName].readOnly) {
-              allReadOnly = false;
-            } else if (!thing.properties[propertyName].writeOnly) {
-              allWriteOnly = false;
-            }
+        let allReadOnly = true;
+        let allWriteOnly = true;
+        let anyProperties = false;
+        for (let propertyName in thing.properties) {
+          anyProperties = true;
+          if (!thing.properties[propertyName].readOnly) {
+            allReadOnly = false;
+          } else if (!thing.properties[propertyName].writeOnly) {
+            allWriteOnly = false;
           }
-          if (anyProperties) {
-            let href = base + "/" + this.ALL_DIR + "/" + encodeURIComponent(this.ALL_PROPERTIES);
-            let form = new TD.Form(href, type);
-            if (allReadOnly) {
-              form.op = ["readallproperties", "readmultipleproperties"];
-            } else if (allWriteOnly) {
-              form.op = ["writeallproperties", "writemultipleproperties"];
-            } else {
-              form.op = ["readallproperties", "readmultipleproperties", "writeallproperties", "writemultipleproperties"];
-            }
-            if (!thing.forms) {
-              thing.forms = [];
-            }
-            thing.forms.push(form);
+        }
+        if (anyProperties) {
+          let href = base + "/" + this.ALL_DIR + "/" + encodeURIComponent(this.ALL_PROPERTIES);
+          let form = new TD.Form(href, type);
+          if (allReadOnly) {
+            form.op = ["readallproperties", "readmultipleproperties"];
+          } else if (allWriteOnly) {
+            form.op = ["writeallproperties", "writemultipleproperties"];
+          } else {
+            form.op = ["readallproperties", "readmultipleproperties", "writeallproperties", "writemultipleproperties"];
           }
+          if (!thing.forms) {
+            thing.forms = [];
+          }
+          thing.forms.push(form);
         }
 
         for (let propertyName in thing.properties) {

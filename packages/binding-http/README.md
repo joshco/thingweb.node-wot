@@ -149,8 +149,8 @@ servient.start().then((WoT) => {
 The protocol binding can be configured using his constructor or trough servient config file. The `HTTPConfig` object contains a set of useful parameters: 
 ```ts
 {
-    port?: number;                  // HTTP server port
-    address?: string;               // HTTP server address
+    port?: number;                  // TCP Port to listen on
+    address?: string;               // IP address or hostname of local interface to bind to
     proxy?: HttpProxyConfig;        // proxy configuration
     allowSelfSigned?: boolean;      // Accept self signed certificates
     serverKey?: string;             // HTTPs server secret key file
@@ -225,28 +225,33 @@ The above configuration file, is setting up a https server with basic secure sch
 ### oAuth2.0
 Currently this binding supports only oAuth2.0 `client credential` and `Resource owner credential` flows. Other flows may be implemented in future like `code` flow. Futhermore, the oAuth2.0 protocol is only implemented for the client side.
 
-An example of a WoT oAuth2.0 enabled client can be found [here](../examples/security/oauth).
+An example of a WoT oAuth2.0 enabled client can be found [here](../examples/src/security/oauth/README.md).
 
 
-### Using BaseUri
+### Using baseUri
 
-> BaseUri allows the TD to use hostnames, network interfaces, and URI prefixes whicch are not local to the machine exposing the Thing
+Assume the example [WoT coffee machine](../examples/src/scripts/coffee-machine.ts) is in the W3C's office kitchen connected to the W3C's private network.  It allows you to start the coffee machine before you leave home so it will be ready when you get to work.
 
-Assume the coffee machine example is sitting in an office inside the W3C's private network.  It allows you to start the coffee machine before you leave home so it will be ready when you get to work.
+Inside the W3C's private network the coffee machine can found at:
+<br/>`https://internal-host:8080/smart-coffee-machine`
 
-* It can be addressed from home via the internet facing domain name `https://wot.w3c.org/things/smart-coffee-machinet`
-* The actual coffee machine TD is at `https://internal-host:8080/coffee-pot`
+From your home, it can be addressed via an Internet accessible domain name: 
+<br/>`https://coffee.w3.org/things/smart-coffee-machine`
+
+
 
 __HttpServer Configuration__
+
 ```js
 servient.addServer(new HttpServer({
     port: 8080, // (default 8080)
-    baseUri: 'https://coffee.w3c.org/things'
+    baseUri: 'https://coffee.w3.org/things'
 }));
 ```
 
 __External Gateway Configuration__
-> assume nginx
+
+The DNS name`coffee.w3.org` resolves to an elastic IP on a gateway using nginx, which has this rule configured. 
 
 ```
 location /things/ {
@@ -261,8 +266,13 @@ The exposed thing on the internal server will product form URLs such as:
     "makeDrink": {
       "forms": [
         {
-          "href": "https://wot.w3c.org/pot/things/smart-coffee-machine/actions/makeDrink"
+          "href": "https://wot.w3.org/things/smart-coffee-machine/actions/makeDrink"
 ```
+__baseUrt vs address__
+
+> `baseUri` tells the producer to prefix URLs which may include hostnames, network interfaces, and URI prefixes which are not local to the machine exposing the Thing.
+> `address` tells the HttpServer a specific ocal network interface to bind its TCP listener. 
+
 
 ## Feature matrix
 
